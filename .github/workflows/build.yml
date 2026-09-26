@@ -26,8 +26,14 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Build web assets
-      run: npm run build --if-present
+    - name: Prepare web assets folder
+      run: |
+        mkdir -p www
+        # Copia los archivos web comunes hacia la carpeta www si están en la raíz
+        cp -r index.html app.js styles.json manifest.json www/ 2>/dev/null || true
+        cp *.js www/ 2>/dev/null || true
+        cp *.html www/ 2>/dev/null || true
+        cp *.css www/ 2>/dev/null || true
 
     - name: Initialize Android Platform
       run: |
