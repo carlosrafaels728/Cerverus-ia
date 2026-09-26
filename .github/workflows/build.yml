@@ -26,10 +26,13 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Add Android platform safely
-      run: npx cap add android --force || true
+    - name: Initialize Android Platform
+      run: |
+        if [ ! -d "android" ]; then
+          npx cap add android
+        fi
 
-    - name: Update Capacitor Assets and Sync
+    - name: Sync Capacitor Android
       run: npx cap sync android
 
     - name: Grant execute permission for gradlew
