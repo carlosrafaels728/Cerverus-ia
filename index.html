@@ -1,36 +1,73 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#07111f">
-  <title>Cerberus IA</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cerberus IA</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <div class="brand"><div class="logo">🐺</div><div><b>Cerberus IA</b><small>Asistente inteligente</small></div></div>
-    <button id="theme">☾</button>
-  </header>
-  <main>
-    <section class="hero">
-      <div class="orb">◈</div>
-      <h1>Hola, soy Cerberus IA</h1>
-      <p>Base móvil preparada para crecer con chat, voz, imágenes, vídeo y automatización.</p>
-    </section>
-    <section id="messages" class="messages"></section>
-    <div class="composer">
-      <textarea id="input" placeholder="Escribe un mensaje..."></textarea>
-      <div class="actions">
-        <button id="mic">🎙️ Voz</button>
-        <button id="attach">📎 Archivo</button>
-        <button id="send" class="primary">Enviar</button>
-      </div>
-      <input id="file" type="file" hidden>
+    <div class="app-container">
+        <!-- Barra Superior -->
+        <header class="app-header">
+            <div class="header-left">
+                <img src="logo.png" alt="Cerberus IA Logo" class="app-logo">
+                <div class="app-title-container">
+                    <h1>Cerberus IA</h1>
+                    <span class="app-subtitle">Asistente inteligente</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="btn-new-chat" title="Nueva conversación">➕</button>
+                <button id="btn-settings" title="Configuración">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Contenedor del Chat -->
+        <main class="chat-container" id="chat-messages">
+            <div class="message ai-message">
+                <p>¡Hola! Soy <strong>Cerberus IA</strong>. Tu asistente avanzado está listo. Selecciona una opción o escribe abajo para comenzar.</p>
+            </div>
+        </main>
+
+        <!-- Panel de Adjuntos Desplegable -->
+        <div class="attachment-menu hidden" id="attachment-menu">
+            <button id="btn-attach-image">📷 Tomar Foto / Imagen</button>
+            <button id="btn-attach-video">🎥 Video</button>
+            <button id="btn-attach-file">📁 Archivo / Documento</button>
+        </div>
+
+        <!-- Barra Inferior de Entrada -->
+        <footer class="chat-input-footer">
+            <div class="input-wrapper">
+                <button id="btn-toggle-clip" class="icon-btn" title="Adjuntar archivo o multimedia">📎</button>
+                <textarea id="user-input" placeholder="Escribe un mensaje..." rows="1"></textarea>
+                <button id="btn-voice" class="icon-btn" title="Chat por voz">🎤</button>
+                <button id="btn-send" class="send-btn" title="Enviar">Enviar</button>
+            </div>
+        </footer>
     </div>
-  </main>
-  <footer>Autor: CarlosArt · Cerberus IA</footer>
-  <script src="app.js"></script>
+
+    <!-- Modal de Configuración -->
+    <div class="modal hidden" id="settings-modal">
+        <div class="modal-content">
+            <h2>Configuración</h2>
+            <label>Idioma: 
+                <select id="setting-lang">
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                </select>
+            </label>
+            <label>Voz del Asistente: 
+                <input type="checkbox" id="setting-voice-enabled" checked> Activa
+            </label>
+            <label>Modo Oscuro: 
+                <input type="checkbox" id="setting-dark-mode" checked> Activo
+            </label>
+            <button id="close-settings">Guardar y Cerrar</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
