@@ -1,0 +1,8 @@
+{
+  "appId": "com.carlosart.cerberusia",
+  "appName": "Cerberus IA",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name":"Cerberus IA",
+  "short_name":"Cerberus",
+  "start_url":".",
+  "display":"standalone",
+  "background_color":"#07111f",
+  "theme_color":"#07111f",
+  "icons":[]
+}
