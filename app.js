@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configuración de la API de Google Gemini
     const API_KEY = 'AIzaSyCLJJcE4voLSUXgrZ6Dgjy920QzmIVFYj4'; 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${API_KEY}`;
 
 
     // 1. Botón de Configuración
