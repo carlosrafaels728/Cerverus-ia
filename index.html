@@ -2,69 +2,136 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cerberus IA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Iconos de Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
 <body>
     <div class="app-container">
-        <!-- Barra Superior -->
-        <header class="app-header">
-            <div class="header-left">
-                <img src="logo.jpg" alt="Cerberus IA Logo" class="app-logo">
-                <div class="app-title-container">
-                    <h1>Cerberus IA</h1>
-                    <span class="app-subtitle">Asistente inteligente</span>
+        <!-- Menú Lateral (Sidebar) -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h2>Cerberus</h2>
+                <button id="btn-close-sidebar" class="icon-btn"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            
+            <div class="sidebar-menu">
+                <button class="menu-item primary-action" id="btn-new-chat">
+                    <span class="material-symbols-outlined">edit_square</span> Nueva conversación
+                </button>
+                <button class="menu-item" id="btn-search-chats">
+                    <span class="material-symbols-outlined">search</span> Buscar conversaciones
+                </button>
+                <button class="menu-item" id="nav-images">
+                    <span class="material-symbols-outlined">image</span> Imágenes
+                </button>
+                <button class="menu-item" id="nav-videos">
+                    <span class="material-symbols-outlined">video_library</span> Vídeos
+                </button>
+                <button class="menu-item" id="nav-library">
+                    <span class="material-symbols-outlined">grid_view</span> Biblioteca
+                </button>
+            </div>
+
+            <div class="sidebar-section-title">Cuadernos</div>
+            <div class="sidebar-menu">
+                <button class="menu-item" id="btn-new-notebook">
+                    <span class="material-symbols-outlined">add</span> Nuevo cuaderno
+                </button>
+            </div>
+
+            <div class="sidebar-section-title">Reciente</div>
+            <div id="chat-history-list" class="chat-history-list">
+                <!-- Historial dinámico -->
+                <div class="history-item">Arquitectura y desarrollo de Cer...</div>
+                <div class="history-item">El significado de los logos de IA</div>
+                <div class="history-item">El Propósito De Gemini</div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-trigger" id="btn-profile-menu">
+                    <img src="https://lh3.googleusercontent.com/a/ACg8ocJ..." alt="Avatar" class="avatar-img">
+                    <div class="user-info">
+                        <span class="user-name">Carlos Rafael S...</span>
+                        <span class="user-email">carlosrafaels728@gma...</span>
+                    </div>
+                </div>
+                <button id="btn-settings" class="icon-btn setting-gear"><span class="material-symbols-outlined">settings</span></button>
+            </div>
+        </aside>
+
+        <!-- Área Principal de Chat -->
+        <main class="main-chat">
+            <header class="chat-header">
+                <button id="btn-toggle-sidebar" class="icon-btn"><span class="material-symbols-outlined">menu</span></button>
+                <span class="app-title">Cerberus IA</span>
+                <button class="btn-upgrade">Actualizar</button>
+            </header>
+
+            <div id="chat-messages" class="chat-messages">
+                <div class="message ai-message">
+                    <p>Hola <strong>Carlos</strong>. ¿En qué te puedo ayudar hoy con Cerberus IA?</p>
                 </div>
             </div>
-            <div class="header-right">
-                <button id="btn-new-chat" title="Nueva conversación">➕</button>
-                <button id="btn-settings" title="Configuración">⚙️</button>
-            </div>
-        </header>
 
-        <!-- Contenedor del Chat -->
-        <main class="chat-container" id="chat-messages">
-            <div class="message ai-message">
-                <p>¡Hola! Soy <strong>Cerberus IA</strong>. Tu asistente avanzado está listo. Selecciona una opción o escribe abajo para comenzar.</p>
+            <!-- Barra de Entrada -->
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <div class="clip-container">
+                        <button id="btn-toggle-clip" class="icon-btn"><span class="material-symbols-outlined">add_circle</span></button>
+                        <!-- Menú desplegable de adjuntos -->
+                        <div id="attachment-menu" class="attachment-menu hidden">
+                            <button id="btn-attach-image"><span class="material-symbols-outlined">image</span> Imagen</button>
+                            <button id="btn-attach-video"><span class="material-symbols-outlined">videocam</span> Video</button>
+                            <button id="btn-attach-file"><span class="material-symbols-outlined">upload_file</span> Archivo</button>
+                        </div>
+                    </div>
+                    <textarea id="user-input" placeholder="Escribe un mensaje..." rows="1"></textarea>
+                    <button id="btn-voice" class="icon-btn"><span class="material-symbols-outlined">mic</span></button>
+                    <button id="btn-send" class="icon-btn send-btn"><span class="material-symbols-outlined">send</span></button>
+                </div>
             </div>
         </main>
-
-        <!-- Panel de Adjuntos Desplegable -->
-        <div class="attachment-menu hidden" id="attachment-menu">
-            <button id="btn-attach-image">📷 Tomar Foto / Imagen</button>
-            <button id="btn-attach-video">🎥 Video</button>
-            <button id="btn-attach-file">📁 Archivo / Documento</button>
-        </div>
-
-        <!-- Barra Inferior de Entrada -->
-        <footer class="chat-input-footer">
-            <div class="input-wrapper">
-                <button id="btn-toggle-clip" class="icon-btn" title="Adjuntar archivo o multimedia">📎</button>
-                <textarea id="user-input" placeholder="Escribe un mensaje..." rows="1"></textarea>
-                <button id="btn-voice" class="icon-btn" title="Chat por voz">🎤</button>
-                <button id="btn-send" class="send-btn" title="Enviar">Enviar</button>
-            </div>
-        </footer>
     </div>
 
-    <!-- Modal de Configuración -->
-    <div class="modal hidden" id="settings-modal">
+    <!-- Modal de Configuración & API Key -->
+    <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>Configuración</h2>
-            <label>Idioma: 
-                <select id="setting-lang">
-                    <option value="es">Español</option>
-                    <option value="en">English</option>
-                </select>
-            </label>
-            <label>Voz del Asistente: 
-                <input type="checkbox" id="setting-voice-enabled" checked> Activa
-            </label>
-            <label>Modo Oscuro: 
-                <input type="checkbox" id="setting-dark-mode" checked> Activo
-            </label>
-            <button id="close-settings">Guardar y Cerrar</button>
+            <h3>Configuración de Cerberus IA</h3>
+            <p>Ingresa tu clave de API de Google Gemini para habilitar las respuestas inteligentes:</p>
+            <input type="password" id="api-key-input" placeholder="AIzaSy...">
+            <div class="modal-buttons">
+                <button id="save-settings" class="btn-primary">Guardar Clave</button>
+                <button id="close-settings" class="btn-secondary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Perfil Avanzado -->
+    <div id="profile-modal" class="modal hidden">
+        <div class="modal-content profile-modal-content">
+            <div class="profile-header-modal">
+                <img src="https://lh3.googleusercontent.com/a/ACg8ocJ..." alt="Avatar" class="avatar-large">
+                <div>
+                    <h4>Carlos Rafael Severino</h4>
+                    <p>carlosrafaels728@gmail.com</p>
+                </div>
+            </div>
+            <hr class="divider">
+            <div class="profile-options">
+                <button class="profile-opt"><span class="material-symbols-outlined">manage_accounts</span> Gestionar tu cuenta de Google</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">auto_awesome</span> Actualizar a Google AI Plus</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">speed</span> Límites de uso</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">history</span> Actividad en las Aplicaciones de Gemini</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">psychology</span> Inteligencia personalizada</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">notifications</span> Notificaciones</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">database</span> Importar dato memorizado a Gemini</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">diamond</span> Gestor de Gems</button>
+                <button class="profile-opt"><span class="material-symbols-outlined">schedule</span> Acciones programadas</button>
+            </div>
+            <button id="close-profile" class="btn-secondary full-width">Cerrar</button>
         </div>
     </div>
 
