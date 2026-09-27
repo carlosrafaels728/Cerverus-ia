@@ -17,7 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnVoice = document.getElementById('btn-voice');
     const chatMessages = document.getElementById('chat-messages');
 
-    // 1. Botón de Configuración (Abrir/Cerrar Modal)
+    // Configuración de la API de OpenAI (ChatGPT)
+    const API_KEY = 'AQUI_PEGA_TU_API_KEY_DE_OPENAI'; 
+    const API_URL = 'https://api.openai.com/v1/chat/completions';
+
+    // 1. Botón de Configuración
     if (btnSettings && settingsModal) {
         btnSettings.addEventListener('click', () => {
             settingsModal.classList.remove('hidden');
@@ -30,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Botón Nueva Conversación (Limpia el chat)
+    // 2. Botón Nueva Conversación
     if (btnNewChat && chatMessages) {
         btnNewChat.addEventListener('click', () => {
             chatMessages.innerHTML = `
@@ -41,14 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Menú desplegable del Clip (Adjuntar archivos)
+    // 3. Menú desplegable del Clip
     if (btnToggleClip && attachmentMenu) {
         btnToggleClip.addEventListener('click', (e) => {
             e.stopPropagation();
             attachmentMenu.classList.toggle('hidden');
         });
 
-        // Ocultar menú si se hace clic fuera
         document.addEventListener('click', (e) => {
             if (!attachmentMenu.contains(e.target) && e.target !== btnToggleClip) {
                 attachmentMenu.classList.add('hidden');
@@ -56,10 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Acciones de los botones de adjuntos
+    // 4. Acciones de adjuntos
     if (btnAttachImage) {
         btnAttachImage.addEventListener('click', () => {
-            alert('Abriendo selector de cámara / galería para imagen...');
             attachmentMenu.classList.add('hidden');
             appendUserMessage('[Imagen adjuntada]');
         });
@@ -67,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnAttachVideo) {
         btnAttachVideo.addEventListener('click', () => {
-            alert('Abriendo selector de video...');
             attachmentMenu.classList.add('hidden');
             appendUserMessage('[Video adjuntado]');
         });
@@ -75,13 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnAttachFile) {
         btnAttachFile.addEventListener('click', () => {
-            alert('Abriendo explorador de archivos...');
             attachmentMenu.classList.add('hidden');
             appendUserMessage('[Archivo adjuntado]');
         });
     }
 
-    // 5. Envío de mensajes de texto
+    // 5. Envío de mensajes y consumo de la API de OpenAI
     if (btnSend && userInput && chatMessages) {
         btnSend.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
@@ -92,22 +92,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function sendMessage() {
+    async function sendMessage() {
         const text = userInput.value.trim();
         if (!text) return;
 
-        // Agregar mensaje del usuario
         appendUserMessage(text);
         userInput.value = '';
 
-        // Simular respuesta de la IA (preparado para API real)
-        setTimeout(() => {
-            const aiMsg = document.createElement('div');
-            aiMsg.className = 'message ai-message';
-            aiMsg.innerHTML = `<p>Mensaje procesado correctamente en Cerberus IA. Conecta tu API key en este script para recibir respuestas en vivo.</p>`;
-            chatMessages.appendChild(aiMsg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 800);
+        // Indicador de "escribiendo..."
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = 'message ai-message';
+        loadingMsg.innerHTML = `<p>Cerberus IA está pensando...</p>`;
+        chatMessages.appendChild(loadingMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            // Petición real a la API de OpenAI (ChatGPT)
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini", // O puedes usar "gpt-3.5-turbo"
+                    messages: [
+                        { role: "system", content: "Eres Cerberus IA, un asistente avanzado y experto." },
+                        { role: "user", content: text }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            chatMessages.removeChild(loadingMsg);
+
+            if (data.choices && data.choices[0].message.content) {
+                const aiReply = data.choices[0].message.content;
+                appendAiMessage(aiReply);
+            } else if (data.error) {
+                appendAiMessage(`Error de OpenAI: ${data.error.message}`);
+            } else {
+                appendAiMessage('Lo siento, no pude procesar la respuesta.');
+            }
+
+        } catch (error) {
+            chatMessages.removeChild(loadingMsg);
+            if (API_KEY === 'AQUI_PEGA_TU_API_KEY_DE_OPENAI') {
+                appendAiMessage('Error: Debes colocar tu clave de API de OpenAI en el código de app.js.');
+            } else {
+                appendAiMessage('Error de conexión con la red o la API de OpenAI.');
+            }
+        }
     }
 
     function appendUserMessage(text) {
@@ -118,10 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    function appendAiMessage(text) {
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'message ai-message';
+        aiMsg.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
+        chatMessages.appendChild(aiMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
     // 6. Botón de Voz
     if (btnVoice) {
         btnVoice.addEventListener('click', () => {
-            alert('Asistente de voz activado. Habla ahora...');
+            alert('Módulo de chat por voz en preparación...');
         });
     }
 });
