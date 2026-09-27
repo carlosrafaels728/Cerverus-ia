@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
 
     // Configuración de la API de OpenAI (ChatGPT)
-    const API_KEY = 'AQUI_PEGA_TU_API_KEY_DE_OPENAI'; 
+    const API_KEY = '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'; 
     const API_URL = 'https://api.openai.com/v1/chat/completions';
 
     // 1. Botón de Configuración
