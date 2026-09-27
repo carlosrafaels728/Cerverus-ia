@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnVoice = document.getElementById('btn-voice');
     const chatMessages = document.getElementById('chat-messages');
 
-    // Configuración de la API de OpenAI (ChatGPT)
-    const API_KEY = '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'; 
-    const API_URL = 'https://api.openai.com/v1/chat/completions';
+    // Configuración de la API de Google Gemini
+    const API_KEY = 'AIzaSyCLJJcE4voLSUXgrZ6Dgjy920QzmIVFYj4'; 
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
     // 1. Botón de Configuración
     if (btnSettings && settingsModal) {
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Envío de mensajes y consumo de la API de OpenAI
+    // 5. Envío de mensajes y consumo de la API de Google Gemini
     if (btnSend && userInput && chatMessages) {
         btnSend.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
@@ -107,40 +107,37 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         try {
-            // Petición real a la API de OpenAI (ChatGPT)
+            // Petición real a la API de Google Gemini
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${API_KEY}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: "gpt-4o-mini", // O puedes usar "gpt-3.5-turbo"
-                    messages: [
-                        { role: "system", content: "Eres Cerberus IA, un asistente avanzado y experto." },
-                        { role: "user", content: text }
-                    ]
+                    contents: [{
+                        parts: [{ text: text }]
+                    }]
                 })
             });
 
             const data = await response.json();
             chatMessages.removeChild(loadingMsg);
 
-            if (data.choices && data.choices[0].message.content) {
-                const aiReply = data.choices[0].message.content;
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                const aiReply = data.candidates[0].content.parts[0].text;
                 appendAiMessage(aiReply);
             } else if (data.error) {
-                appendAiMessage(`Error de OpenAI: ${data.error.message}`);
+                appendAiMessage(`Error de Gemini: ${data.error.message}`);
             } else {
                 appendAiMessage('Lo siento, no pude procesar la respuesta.');
             }
 
         } catch (error) {
             chatMessages.removeChild(loadingMsg);
-            if (API_KEY === 'AQUI_PEGA_TU_API_KEY_DE_OPENAI') {
-                appendAiMessage('Error: Debes colocar tu clave de API de OpenAI en el código de app.js.');
+            if (API_KEY === 'AQUI_PEGA_TU_API_KEY_DE_GOOGLE') {
+                appendAiMessage('Error: Debes colocar tu clave de API de Google en el código de app.js.');
             } else {
-                appendAiMessage('Error de conexión con la red o la API de OpenAI.');
+                appendAiMessage('Error de conexión con la red o la API de Google.');
             }
         }
     }
