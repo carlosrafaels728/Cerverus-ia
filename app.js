@@ -1,28 +1,51 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a los elementos de la interfaz
-    const btnNewChat = document.getElementById('btn-new-chat');
-    const btnSettings = document.getElementById('btn-settings');
-    const settingsModal = document.getElementById('settings-modal');
-    const closeSettings = document.getElementById('close-settings');
+    const sidebar = document.getElementById('sidebar');
+    const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+    const btnCloseSidebar = document.getElementById('btn-close-sidebar');
     
+    const btnNewChat = document.getElementById('btn-new-chat');
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const btnSend = document.getElementById('btn-send');
+
+    // Menú de adjuntos (+ clip)
     const btnToggleClip = document.getElementById('btn-toggle-clip');
     const attachmentMenu = document.getElementById('attachment-menu');
-    
     const btnAttachImage = document.getElementById('btn-attach-image');
     const btnAttachVideo = document.getElementById('btn-attach-video');
     const btnAttachFile = document.getElementById('btn-attach-file');
-    
-    const userInput = document.getElementById('user-input');
-    const btnSend = document.getElementById('btn-send');
-    const btnVoice = document.getElementById('btn-voice');
-    const chatMessages = document.getElementById('chat-messages');
 
-    // Configuración de la API de Google Gemini
-    const API_KEY = 'AIzaSyCLJJcE4voLSUXgrZ6Dgjy920QzmIVFYj4'; 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${API_KEY}`;
+    // Modales
+    const btnSettings = document.getElementById('btn-settings');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettings = document.getElementById('close-settings');
+    const saveSettings = document.getElementById('save-settings');
+    const apiKeyInput = document.getElementById('api-key-input');
 
+    const btnProfileMenu = document.getElementById('btn-profile-menu');
+    const profileModal = document.getElementById('profile-modal');
+    const closeProfile = document.getElementById('close-profile');
 
-    // 1. Botón de Configuración
+    // Cargar API Key
+    let API_KEY = localStorage.getItem('cerberus_gemini_key') || '';
+    if (apiKeyInput && API_KEY) {
+        apiKeyInput.value = API_KEY;
+    }
+
+    // Control de Sidebar (Menú lateral hamburguesa)
+    if (btnToggleSidebar && sidebar) {
+        btnToggleSidebar.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+    }
+
+    if (btnCloseSidebar && sidebar) {
+        btnCloseSidebar.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+        });
+    }
+
+    // Modal de Configuración (API Key)
     if (btnSettings && settingsModal) {
         btnSettings.addEventListener('click', () => {
             settingsModal.classList.remove('hidden');
@@ -35,18 +58,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Botón Nueva Conversación
-    if (btnNewChat && chatMessages) {
-        btnNewChat.addEventListener('click', () => {
-            chatMessages.innerHTML = `
-                <div class="message ai-message">
-                    <p>Conversación reiniciada. ¿En qué te puedo ayudar hoy con <strong>Cerberus IA</strong>?</p>
-                </div>
-            `;
+    if (saveSettings && apiKeyInput) {
+        saveSettings.addEventListener('click', () => {
+            const newKey = apiKeyInput.value.trim();
+            if (newKey) {
+                localStorage.setItem('cerberus_gemini_key', newKey);
+                API_KEY = newKey;
+                alert('¡Clave de API guardada correctamente en el dispositivo!');
+                settingsModal.classList.add('hidden');
+            } else {
+                alert('Por favor, ingresa una clave válida.');
+            }
         });
     }
 
-    // 3. Menú desplegable del Clip
+    // Modal de Perfil de Usuario (Captura exacta)
+    if (btnProfileMenu && profileModal) {
+        btnProfileMenu.addEventListener('click', () => {
+            profileModal.classList.remove('hidden');
+        });
+    }
+
+    if (closeProfile && profileModal) {
+        closeProfile.addEventListener('click', () => {
+            profileModal.classList.add('hidden');
+        });
+    }
+
+    // Menú desplegable de Clip
     if (btnToggleClip && attachmentMenu) {
         btnToggleClip.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -60,29 +99,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Acciones de adjuntos
-    if (btnAttachImage) {
-        btnAttachImage.addEventListener('click', () => {
-            attachmentMenu.classList.add('hidden');
-            appendUserMessage('[Imagen adjuntada]');
+    if (btnAttachImage) btnAttachImage.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); appendUserMessage('[Imagen adjuntada]'); });
+    if (btnAttachVideo) btnAttachVideo.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); appendUserMessage('[Video adjuntado]'); });
+    if (btnAttachFile) btnAttachFile.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); appendUserMessage('[Archivo adjuntado]'); });
+
+    // Nueva conversación
+    if (btnNewChat && chatMessages) {
+        btnNewChat.addEventListener('click', () => {
+            chatMessages.innerHTML = `
+                <div class="message ai-message">
+                    <p>Conversación reiniciada. ¿En qué te puedo ayudar hoy?</p>
+                </div>
+            `;
         });
     }
 
-    if (btnAttachVideo) {
-        btnAttachVideo.addEventListener('click', () => {
-            attachmentMenu.classList.add('hidden');
-            appendUserMessage('[Video adjuntado]');
-        });
-    }
-
-    if (btnAttachFile) {
-        btnAttachFile.addEventListener('click', () => {
-            attachmentMenu.classList.add('hidden');
-            appendUserMessage('[Archivo adjuntado]');
-        });
-    }
-
-    // 5. Envío de mensajes y consumo de la API de Google Gemini
+    // Enviar mensajes a la API de Gemini
     if (btnSend && userInput && chatMessages) {
         btnSend.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
@@ -97,10 +129,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = userInput.value.trim();
         if (!text) return;
 
+        if (!API_KEY) {
+            appendAiMessage('⚠️ No hay una clave de API configurada. Toca el icono de engranaje (⚙️) abajo a la izquierda para ingresarla.');
+            return;
+        }
+
         appendUserMessage(text);
         userInput.value = '';
 
-        // Indicador de "escribiendo..."
         const loadingMsg = document.createElement('div');
         loadingMsg.className = 'message ai-message';
         loadingMsg.innerHTML = `<p>Cerberus IA está pensando...</p>`;
@@ -108,16 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         try {
-            // Petición real a la API de Google Gemini
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+            
             const response = await fetch(API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: text }]
-                    }]
+                    contents: [{ parts: [{ text: text }] }]
                 })
             });
 
@@ -135,11 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             chatMessages.removeChild(loadingMsg);
-            if (API_KEY === 'AQUI_PEGA_TU_API_KEY_DE_GOOGLE') {
-                appendAiMessage('Error: Debes colocar tu clave de API de Google en el código de app.js.');
-            } else {
-                appendAiMessage('Error de conexión con la red o la API de Google.');
-            }
+            appendAiMessage('Error de conexión con la red o la API de Google.');
         }
     }
 
@@ -157,12 +186,5 @@ document.addEventListener('DOMContentLoaded', () => {
         aiMsg.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
         chatMessages.appendChild(aiMsg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    // 6. Botón de Voz
-    if (btnVoice) {
-        btnVoice.addEventListener('click', () => {
-            alert('Módulo de chat por voz en preparación...');
-        });
     }
 });
