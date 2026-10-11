@@ -1,424 +1,160 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cerberus IA</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
-    :root{--bg:#12121f;--surface:#1e1e2f;--surface2:#2a2a3f;--accent:linear-gradient(135deg,#7b2ffd,#e946c1);--text:#fff;--muted:#aaa;--ok:#4ade80;--error:#f87171;--new-chat:#3b82f6}
-    body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-    header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border-bottom:1px solid #333}
-    .logo{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
-    .logo img{width:100%;height:100%;object-fit:contain}
-    .status-dot{width:10px;height:10px;border-radius:50%;background:var(--ok)}
-    .spacer{flex:1}
-    .icon-btn{background:none;border:none;color:var(--text);font-size:22px;padding:6px;cursor:pointer}
-    .new-chat-btn{background:var(--new-chat);border:none;color:white;padding:6px 12px;border-radius:16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
-    .tabs{display:flex;background:var(--surface);padding:8px 12px;gap:8px;overflow-x:auto}
-    .tab{padding:8px 14px;border-radius:20px;background:var(--surface2);color:var(--muted);font-size:14px;white-space:nowrap;cursor:pointer}
-    .tab.active{background:var(--accent);color:white}
-    main{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
-    .msg{max-width:80%;padding:12px 16px;border-radius:18px;line-height:1.5}
-    .msg.user{background:var(--accent);align-self:flex-end;border-bottom-right-radius:4px}
-    .msg.assistant{background:var(--surface2);align-self:flex-start;border-bottom-left-radius:4px}
-    .msg.system{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid #fbbf2444;align-self:center;font-size:14px;max-width:95%}
-    .msg.error{background:rgba(248,113,113,.1);color:var(--error);border:1px solid #f8717144;align-self:center;font-size:13px;white-space:pre-wrap;max-width:95%}
-    .typing{align-self:flex-start;color:var(--muted);font-size:14px;padding:8px 12px}
-    .input-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--surface);border-top:1px solid #333}
-    .attach-btn{font-size:20px;color:var(--muted);background:none;border:none}
-    input.flex-1{flex:1;padding:10px 14px;border-radius:24px;border:none;background:var(--surface2);color:var(--text);font-size:15px;outline:none}
-    .send-btn{width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;color:white;font-size:18px;cursor:pointer}
-    .settings-page{padding:20px;max-width:500px;margin:0 auto}
-    .settings-page h2{margin-bottom:20px;font-size:18px}
-    .input-group{margin-bottom:14px}
-    label{display:block;margin-bottom:6px;color:var(--muted);font-size:14px}
-    input,select,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:var(--surface2);color:var(--text);font-size:15px}
-    button.primary{background:var(--accent);border:none;color:white;padding:10px 24px;border-radius:8px;font-size:15px;cursor:pointer;margin-top:8px}
-    .section-title{font-size:16px;margin:28px 0 12px 0;color:var(--ok);display:flex;align-items:center;gap:8px}
-    .module-card{background:var(--surface2);padding:16px;border-radius:12px;margin-bottom:16px}
-    .module-card h4{margin-bottom:12px;font-size:15px}
-    .hidden{display:none !important}
-    .conversation-id{text-align:center;font-size:11px;color:var(--muted);margin-bottom:8px}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0d14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Cerberus IA — Powered by carlosart</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-
-  <div id="chat-page">
-    <header>
-      <button class="icon-btn" onclick="openMenu()">☰</button>
-      <div class="logo">
-        <img src="cerberus-logo.png" alt="Cerberus IA">
+  <div class="app">
+    <!-- Sidebar para historial -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h3>Historial</h3>
+        <button class="sidebar-close" id="sidebarClose">✕</button>
       </div>
-      <span style="font-weight:600">Cerberus IA</span>
-      <span class="status-dot"></span>
-      <div class="spacer"></div>
-      <button class="new-chat-btn" onclick="startNewChat()">✉️ Nuevo</button>
-      <button class="icon-btn" onclick="openSettings()">⚙️</button>
-    </header>
+      <div class="sidebar-content" id="sidebarContent">
+        <div class="empty-state">
+          <p>Sin conversaciones recientes</p>
+        </div>
+      </div>
+    </aside>
 
-    <div class="tabs">
-      <div class="tab active" data-tab="chat">💬 Chat</div>
-      <div class="tab" data-tab="scripts">📝 Guiones</div>
-      <div class="tab" data-tab="tiktok">🎵 TikTok</div>
-      <div class="tab" data-tab="images">🖼️ Imágenes</div>
-      <div class="tab" data-tab="video">🎬 Video</div>
-    </div>
+    <!-- Overlay para cerrar sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="conversation-id" id="conv-id"></div>
-    <main id="chat-main"></main>
+    <!-- Contenedor principal -->
+    <div class="main-container">
+      <!-- Topbar -->
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
+        <div class="brand">
+          <span class="brand-icon">C</span>
+          <span class="brand-text">Cerberus IA</span>
+        </div>
+        <button class="settings-btn" id="settingsOpenBtn" aria-label="Abrir configuración">⚙</button>
+      </header>
 
-    <div class="input-bar">
-      <button class="attach-btn">📎</button>
-      <input type="text" id="user-input" placeholder="Escribe a Cerberus…" onkeydown="if(event.key==='Enter')sendMessage()">
-      <button class="send-btn" onclick="sendMessage()">➤</button>
+      <!-- Pestaña de módulos -->
+      <nav class="tabs-nav" role="tablist">
+        <button class="tab-btn active" data-tab="chat" role="tab">💬 Chat</button>
+        <button class="tab-btn" data-tab="images" role="tab">🖼️ Imágenes</button>
+        <button class="tab-btn" data-tab="video" role="tab">🎬 Video</button>
+        <button class="tab-btn" data-tab="scripts" role="tab">📝 Guiones</button>
+      </nav>
+
+      <!-- Área de mensajes -->
+      <main class="chat-area" id="chatArea"></main>
+
+      <!-- Zona de entrada -->
+      <div class="input-zone">
+        <div class="input-wrapper">
+          <button class="attach-btn" id="attachBtn" aria-label="Adjuntar">📎</button>
+          <textarea
+            id="userInput"
+            class="user-input"
+            placeholder="Escribe un mensaje..."
+            rows="1"
+            aria-label="Campo de entrada de texto"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" aria-label="Enviar mensaje">➤</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div id="settings-page" class="settings-page hidden">
-    <h2>⚙️ Configuración</h2>
-
-    <div class="input-group">
-      <label>Formato de la API</label>
-      <select id="api-format">
-        <option value="openai" selected>Compatible con OpenAI</option>
-        <option value="anthropic">Anthropic</option>
-      </select>
+  <!-- Panel de configuración -->
+  <aside class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <h2>⚙️ Configuración</h2>
+      <button class="close-btn" id="settingsCloseBtn">✕</button>
     </div>
 
-    <div class="input-group">
-      <label>URL de la API</label>
-      <input type="text" id="api-url" placeholder="https://api.openai.com/v1/chat/completions">
-    </div>
+    <div class="settings-scroll">
+      <!-- Sección Chat -->
+      <section class="settings-section">
+        <h3>🤖 Chat Principal</h3>
+        <div class="form-group">
+          <label>URL de la API</label>
+          <input id="apiUrl" type="text" placeholder="https://api.openai.com/v1/chat/completions" />
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input id="apiKey" type="password" placeholder="sk-..." />
+        </div>
+        <div class="form-group">
+          <label>Modelo</label>
+          <input id="apiModel" type="text" placeholder="gpt-4o-mini" />
+        </div>
+        <div class="form-group">
+          <label>Instrucciones del Sistema</label>
+          <textarea id="systemPrompt" rows="3" placeholder="Eres Cerberus IA, un asistente inteligente..." ></textarea>
+        </div>
+      </section>
 
-    <div class="input-group">
-      <label>API Key</label>
-      <input type="password" id="api-key" placeholder="sk-...">
-    </div>
+      <!-- Sección Imágenes -->
+      <section class="settings-section">
+        <h3>🖼️ Generador de Imágenes</h3>
+        <div class="form-group">
+          <label>URL</label>
+          <input id="imageApiUrl" type="text" placeholder="https://openrouter.ai/api/v1/images/generations" />
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input id="imageApiKey" type="password" placeholder="sk-or-v1-..." />
+        </div>
+        <div class="form-group">
+          <label>Modelo</label>
+          <input id="imageModel" type="text" placeholder="black-forest-labs/flux-1-schnell" />
+        </div>
+      </section>
 
-    <div class="input-group">
-      <label>Modelo de Chat</label>
-      <input type="text" id="api-model" placeholder="gpt-4o-mini / openai/gpt-4o">
-    </div>
+      <!-- Sección Videos -->
+      <section class="settings-section">
+        <h3>🎬 Generador de Videos</h3>
+        <div class="form-group">
+          <label>URL</label>
+          <input id="videoApiUrl" type="text" placeholder="https://openrouter.ai/api/v1/videos/generations" />
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input id="videoApiKey" type="password" placeholder="sk-or-v1-..." />
+        </div>
+        <div class="form-group">
+          <label>Modelo</label>
+          <input id="videoModel" type="text" placeholder="kling-ai/kling-video-v1" />
+        </div>
+      </section>
 
-    <div class="input-group">
-      <label>Instrucciones del sistema (personalidad)</label>
-      <textarea id="system-prompt" placeholder="Eres Cerberus IA, amable y servicial..." rows="3"></textarea>
-    </div>
-
-    <h3 class="section-title">🧩 APIs de módulos</h3>
-
-    <div class="module-card">
-      <h4>🖼️ Generador de imágenes</h4>
-      <div class="input-group">
-        <label>URL</label>
-        <input type="text" id="image-api-url" placeholder="https://openrouter.ai/api/v1/images/generations">
+      <!-- Info -->
+      <div class="settings-info">
+        <p>💡 <strong>Tip:</strong> Usa OpenRouter para acceder a múltiples modelos de IA con una sola API key.</p>
+        <p>🔗 <strong>Modelos recomendados:</strong></p>
+        <ul>
+          <li>Chat: <code>openai/gpt-4o</code></li>
+          <li>Imágenes: <code>black-forest-labs/flux-1-schnell</code></li>
+          <li>Videos: <code>kling-ai/kling-video-v1</code></li>
+        </ul>
       </div>
-      <div class="input-group">
-        <label>API Key</label>
-        <input type="password" id="image-api-key" placeholder="sk-or-v1-...">
-      </div>
-      <div class="input-group">
-        <label>Modelo</label>
-        <input type="text" id="image-model" placeholder="black-forest-labs/flux-1-schnell">
-      </div>
-    </div>
 
-    <div class="module-card">
-      <h4>🎬 Generador de videos</h4>
-      <div class="input-group">
-        <label>URL</label>
-        <input type="text" id="video-api-url" placeholder="https://openrouter.ai/api/v1/videos/generations">
-      </div>
-      <div class="input-group">
-        <label>API Key</label>
-        <input type="password" id="video-api-key" placeholder="sk-or-v1-...">
-      </div>
-      <div class="input-group">
-        <label>Modelo</label>
-        <input type="text" id="video-model" placeholder="kling-ai/kling-video-v1">
+      <!-- Créditos -->
+      <div class="credits">
+        <p>🚀 <strong>Cerberus IA</strong></p>
+        <p>Creado por <strong>carlosart</strong></p>
+        <p>Compilable para Android nativo con Capacitor</p>
       </div>
     </div>
 
-    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">
-      📝 <strong>Guiones</strong> y 🎵 <strong>TikTok</strong> usan el modelo de Chat principal.<br>
-      🖼️ Para imágenes: prueba <code>black-forest-labs/flux-1-schnell</code><br>
-      🎬 Para videos: prueba <code>kling-ai/kling-video-v1</code> o <code>genmo/mochi-1</code>
-    </p>
+    <div class="settings-actions">
+      <button class="btn-primary" id="saveSettingsBtn">Guardar</button>
+      <button class="btn-secondary" id="cancelSettingsBtn">Cancelar</button>
+    </div>
+  </aside>
 
-    <button class="primary" onclick="saveSettings()">Guardar ✅</button>
-    <p style="margin-top:12px"><a href="#" onclick="closeSettings()" style="color:var(--accent);text-decoration:none">← Volver al chat</a></p>
-    <br>
-    <button class="primary" style="background:#444" onclick="startNewChat()">✉️ Conversación Nueva</button>
-  </div>
-
-<script>
-let messages = [];
-let conversationId = '';
-let currentTab = 'chat';
-let typingInterval = null;
-let isTyping = false;
-
-function generateConvId(){
-  const date = new Date();
-  const random = Math.random().toString(36).substring(2, 8);
-  return `${date.toLocaleDateString('es-DO')} · ${random}`;
-}
-
-function startNewChat(){
-  messages = [];
-  conversationId = generateConvId();
-  document.getElementById('chat-main').innerHTML = '';
-  document.getElementById('conv-id').textContent = '📝 Conversación: ' + conversationId;
-  addSystemMessage('👋 ¡Conversación nueva iniciada! ¿En qué puedo ayudarte hoy?');
-  closeSettings();
-  saveCurrentConversation();
-}
-
-function saveCurrentConversation(){
-  localStorage.setItem('cerberus_last_conv_id', conversationId);
-  localStorage.setItem('cerberus_last_conv', JSON.stringify(messages));
-}
-
-function loadSettings(){
-  document.getElementById('api-format').value = localStorage.getItem('api_format') || 'openai';
-  document.getElementById('api-url').value = localStorage.getItem('api_url') || '';
-  document.getElementById('api-key').value = localStorage.getItem('api_key') || '';
-  document.getElementById('api-model').value = localStorage.getItem('api_model') || '';
-  document.getElementById('system-prompt').value = localStorage.getItem('system_prompt') || 'Eres Cerberus IA, un asistente amable y servicial.';
-  document.getElementById('image-api-url').value = localStorage.getItem('image_api_url') || '';
-  document.getElementById('image-api-key').value = localStorage.getItem('image_api_key') || '';
-  document.getElementById('image-model').value = localStorage.getItem('image_model') || '';
-  document.getElementById('video-api-url').value = localStorage.getItem('video_api_url') || '';
-  document.getElementById('video-api-key').value = localStorage.getItem('video_api_key') || '';
-  document.getElementById('video-model').value = localStorage.getItem('video_model') || '';
-}
-
-function saveSettings(){
-  localStorage.setItem('api_format', document.getElementById('api-format').value);
-  localStorage.setItem('api_url', document.getElementById('api-url').value.trim());
-  localStorage.setItem('api_key', document.getElementById('api-key').value.trim());
-  localStorage.setItem('api_model', document.getElementById('api-model').value.trim());
-  localStorage.setItem('system_prompt', document.getElementById('system-prompt').value.trim());
-  localStorage.setItem('image_api_url', document.getElementById('image-api-url').value.trim());
-  localStorage.setItem('image_api_key', document.getElementById('image-api-key').value.trim());
-  localStorage.setItem('image_model', document.getElementById('image-model').value.trim());
-  localStorage.setItem('video_api_url', document.getElementById('video-api-url').value.trim());
-  localStorage.setItem('video_api_key', document.getElementById('video-api-key').value.trim());
-  localStorage.setItem('video_model', document.getElementById('video-model').value.trim());
-  addSystemMessage('✅ Configuración guardada correctamente.');
-  closeSettings();
-}
-
-function openSettings(){
-  document.getElementById('chat-page').classList.add('hidden');
-  document.getElementById('settings-page').classList.remove('hidden');
-  loadSettings();
-}
-function closeSettings(){
-  document.getElementById('settings-page').classList.add('hidden');
-  document.getElementById('chat-page').classList.remove('hidden');
-}
-
-function addMessage(text, role='assistant'){
-  const main = document.getElementById('chat-main');
-  const div = document.createElement('div');
-  div.className = `msg ${role}`;
-  div.textContent = text;
-  main.appendChild(div);
-  main.scrollTop = main.scrollHeight;
-  if(role !== 'system' && role !== 'error'){
-    messages.push({role, content: text});
-    saveCurrentConversation();
-  }
-  return div;
-}
-
-function addSystemMessage(text){
-  const main = document.getElementById('chat-main');
-  const div = document.createElement('div');
-  div.className = 'msg system';
-  div.textContent = text;
-  main.appendChild(div);
-  main.scrollTop = main.scrollHeight;
-}
-
-function addErrorMessage(text){
-  const main = document.getElementById('chat-main');
-  const div = document.createElement('div');
-  div.className = 'msg error';
-  div.textContent = text;
-  main.appendChild(div);
-  main.scrollTop = main.scrollHeight;
-}
-
-function showTyping(){
-  if(isTyping) return;
-  isTyping = true;
-  const main = document.getElementById('chat-main');
-  const div = document.createElement('div');
-  div.className = 'typing msg';
-  div.id = 'typing-indicator';
-  main.appendChild(div);
-  let dots = '';
-  const baseText = 'Escribiendo';
-  typingInterval = setInterval(() => {
-    dots = dots.length >= 3 ? '' : dots + '.';
-    div.textContent = baseText + dots;
-    main.scrollTop = main.scrollHeight;
-  }, 400);
-  main.scrollTop = main.scrollHeight;
-}
-
-function hideTyping(){
-  if(!isTyping) return;
-  isTyping = false;
-  clearInterval(typingInterval);
-  const el = document.getElementById('typing-indicator');
-  if(el) el.remove();
-}
-
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    currentTab = tab.dataset.tab;
-  });
-});
-
-async function sendMessage(){
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = '';
-
-  const apiUrl = localStorage.getItem('api_url');
-  const apiKey = localStorage.getItem('api_key');
-  const apiModel = localStorage.getItem('api_model');
-  const apiFormat = localStorage.getItem('api_format') || 'openai';
-  const systemPrompt = localStorage.getItem('system_prompt') || 'Eres Cerberus IA, un asistente amable y servicial.';
-
-  if(currentTab === 'images'){
-    const imgUrl = localStorage.getItem('image_api_url');
-    const imgKey = localStorage.getItem('image_api_key');
-    const imgModel = localStorage.getItem('image_model');
-    if(!imgUrl || !imgKey || !imgModel){
-      addMessage(text, 'user');
-      addErrorMessage('⚠️ Completa todos los campos: URL, API Key y Modelo en ⚙️ Configuración.');
-      return;
-    }
-    addMessage(text, 'user');
-    showTyping();
-    try{
-      const res = await fetch(imgUrl, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json','Authorization':`Bearer ${imgKey}`,'HTTP-Referer':'https://cerberus-ia.app','X-Title':'Cerberus IA'},
-        body: JSON.stringify({model: imgModel, prompt: text})
-      });
-      hideTyping();
-      const data = await res.json();
-      if(!res.ok) throw new Error(JSON.stringify(data,null,2));
-      const imageUrl = data.data?.[0]?.url || data.url;
-      if(imageUrl){
-        const main = document.getElementById('chat-main');
-        const div = document.createElement('div');
-        div.className = 'msg assistant';
-        div.innerHTML = `✅ ¡Imagen generada!<br><img src="${imageUrl}" style="max-width:100%;border-radius:8px;margin-top:8px" alt="Imagen generada">`;
-        main.appendChild(div);
-        main.scrollTop = main.scrollHeight;
-      }else{
-        addErrorMessage('No se recibió ninguna imagen. Verifica el modelo y la API Key.');
-      }
-    }catch(err){
-      hideTyping();
-      addErrorMessage('Error: ' + err.message);
-    }
-    return;
-  }
-
-  if(currentTab === 'video'){
-    const vidUrl = localStorage.getItem('video_api_url');
-    const vidKey = localStorage.getItem('video_api_key');
-    const vidModel = localStorage.getItem('video_model');
-    if(!vidUrl || !vidKey || !vidModel){
-      addMessage(text, 'user');
-      addErrorMessage('⚠️ Completa todos los campos: URL, API Key y Modelo en ⚙️ Configuración.');
-      return;
-    }
-    addMessage(text, 'user');
-    showTyping();
-    try{
-      const res = await fetch(vidUrl, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json','Authorization':`Bearer ${vidKey}`,'HTTP-Referer':'https://cerberus-ia.app','X-Title':'Cerberus IA'},
-        body: JSON.stringify({model: vidModel, prompt: text})
-      });
-      hideTyping();
-      const data = await res.json();
-      if(!res.ok) throw new Error(JSON.stringify(data,null,2));
-      const videoUrl = data.data?.[0]?.url || data.url || data.status_url;
-      if(videoUrl){
-        const main = document.getElementById('chat-main');
-        const div = document.createElement('div');
-        div.className = 'msg assistant';
-        div.innerHTML = `✅ ¡Video solicitado!<br>🔗 <a href="${videoUrl}" target="_blank" style="color:#7b2ffd">Ver / Descargar video</a><br><small>Los videos pueden tardar varios minutos en procesarse.</small>`;
-        main.appendChild(div);
-        main.scrollTop = main.scrollHeight;
-      }else{
-        addMessage('✅ Solicitud enviada. Respuesta: ' + JSON.stringify(data, null, 2), 'assistant');
-      }
-    }catch(err){
-      hideTyping();
-      addErrorMessage('Error: ' + err.message);
-    }
-    return;
-  }
-
-  if(!apiUrl || !apiKey || !apiModel){
-    addMessage(text, 'user');
-    addErrorMessage('⚠️ Configura primero la URL, API Key y Modelo de Chat en ⚙️ Configuración.');
-    return;
-  }
-
-  addMessage(text, 'user');
-  showTyping();
-
-  try{
-    let body, headers = {'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`};
-
-    if(apiFormat === 'openai'){
-      let msgs = [];
-      if(systemPrompt) msgs.push({role:'system', content: systemPrompt});
-      msgs = msgs.concat(messages.slice(-25));
-      body = {model: apiModel, messages: msgs, temperature: 0.8};
-    }else if(apiFormat === 'anthropic'){
-      body = {model: apiModel, max_tokens: 4096, system: systemPrompt, messages: messages.slice(-25)};
-      headers['anthropic-version'] = '2023-06-01';
-    }
-
-    const res = await fetch(apiUrl, {
-      method: 'POST', headers, body: JSON.stringify(body)
-    });
-    hideTyping();
-    const data = await res.json();
-    if(!res.ok) throw new Error(JSON.stringify(data,null,2));
-
-    let reply = '';
-    if(apiFormat === 'openai'){
-      reply = data.choices?.[0]?.message?.content || '(sin respuesta)';
-    }else if(apiFormat === 'anthropic'){
-      reply = data.content?.[0]?.text || '(sin respuesta)';
-    }
-    addMessage(reply, 'assistant');
-  }catch(err){
-    hideTyping();
-    addErrorMessage('Error: ' + err.message);
-  }
-}
-
-window.onload = function(){
-  startNewChat();
-};
-</script>
+  <script src="app.js"></script>
 </body>
 </html>

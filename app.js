@@ -1,117 +1,357 @@
-// Configuración de la API (Asegúrate de usar tu clave y el modelo correcto)
-const API_KEY = "TU_API_KEY_AQUI"; 
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${API_KEY}`;
+// ============================================================================
+// CERBERUS IA — Aplicación de Chat con IA Generativa
+// Creado por: carlosart
+// Compilable para: Android nativo (Capacitor)
+// ============================================================================
 
-// Elementos del DOM
-const menuToggle = document.getElementById('menu-toggle');
+const chatArea = document.getElementById('chatArea');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const menuBtn = document.getElementById('menuBtn');
 const sidebar = document.getElementById('sidebar');
-const sidebarOverlay = document.getElementById('sidebar-overlay');
-const sendBtn = document.getElementById('send-btn');
-const userInput = document.getElementById('user-input');
-const chatMessages = document.getElementById('chat-messages');
-const newChatBtn = document.getElementById('new-chat-btn');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const sidebarClose = document.getElementById('sidebarClose');
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsOpenBtn = document.getElementById('settingsOpenBtn');
+const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+const tabBtns = [...document.querySelectorAll('.tab-btn')];
 
-// 1. Control del Menú Deslizante (Hamburguesa)
-if (menuToggle && sidebar && sidebarOverlay) {
-    menuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        sidebarOverlay.classList.toggle('active');
-    });
+let currentTab = 'chat';
+let typingActive = false;
 
-    sidebarOverlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        sidebarOverlay.classList.remove('active');
-    });
+// ============================================================================
+// UTILIDADES DE ALMACENAMIENTO
+// ============================================================================
+
+function store(key, value) {
+  localStorage.setItem(key, value);
 }
 
-// Botón de nueva conversación recarga o limpia
-if (newChatBtn) {
-    newChatBtn.addEventListener('click', () => {
-        location.reload();
-    });
+function retrieve(key, defaultValue = '') {
+  return localStorage.getItem(key) ?? defaultValue;
 }
 
-// 2. Función para enviar mensajes al hacer clic en el botón o presionar enter
-if (sendBtn && userInput) {
-    sendBtn.addEventListener('click', enviarMensaje);
-    userInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            enviarMensaje();
-        }
-    });
+// ============================================================================
+// GESTIÓN DE CONFIGURACIÓN
+// ============================================================================
+
+function loadSettings() {
+  document.getElementById('apiUrl').value = retrieve('apiUrl');
+  document.getElementById('apiKey').value = retrieve('apiKey');
+  document.getElementById('apiModel').value = retrieve('apiModel', 'gpt-4o-mini');
+  document.getElementById('systemPrompt').value = retrieve('systemPrompt', 'Eres Cerberus IA, un asistente inteligente, creativo y útil.');
+
+  document.getElementById('imageApiUrl').value = retrieve('imageApiUrl');
+  document.getElementById('imageApiKey').value = retrieve('imageApiKey');
+  document.getElementById('imageModel').value = retrieve('imageModel', 'black-forest-labs/flux-1-schnell');
+
+  document.getElementById('videoApiUrl').value = retrieve('videoApiUrl');
+  document.getElementById('videoApiKey').value = retrieve('videoApiKey');
+  document.getElementById('videoModel').value = retrieve('videoModel', 'kling-ai/kling-video-v1');
 }
 
-async function enviarMensaje() {
-    const texto = userInput.value.trim();
-    if (!texto) return;
+function saveSettings() {
+  store('apiUrl', document.getElementById('apiUrl').value.trim());
+  store('apiKey', document.getElementById('apiKey').value.trim());
+  store('apiModel', document.getElementById('apiModel').value.trim());
+  store('systemPrompt', document.getElementById('systemPrompt').value.trim());
 
-    // Eliminar pantalla de bienvenida si es el primer mensaje
-    const welcomeSection = document.querySelector('.welcome-section');
-    if (welcomeSection) {
-        welcomeSection.remove();
-    }
+  store('imageApiUrl', document.getElementById('imageApiUrl').value.trim());
+  store('imageApiKey', document.getElementById('imageApiKey').value.trim());
+  store('imageModel', document.getElementById('imageModel').value.trim());
 
-    // Agregar mensaje del usuario
-    agregarMensajeAlChat(texto, 'user');
-    userInput.value = '';
-    userInput.style.height = 'auto';
+  store('videoApiUrl', document.getElementById('videoApiUrl').value.trim());
+  store('videoApiKey', document.getElementById('videoApiKey').value.trim());
+  store('videoModel', document.getElementById('videoModel').value.trim());
 
-    // Mostrar animación de los tres puntitos (pensando)
-    const loadingId = mostrarCargando();
-
-    try {
-        const respuestaAI = await consultarGemini(texto);
-        ocultarCargando(loadingId);
-        agregarMensajeAlChat(respuestaAI, 'ai');
-    } catch (error) {
-        ocultarCargando(loadingId);
-        agregarMensajeAlChat("Error de Gemini: No se pudo conectar con el servidor.", 'ai');
-    }
+  addMessage('✅ Configuración guardada correctamente.', 'system');
 }
 
-function agregarMensajeAlChat(texto, tipo) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${tipo}`;
-    messageDiv.textContent = texto;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+// ============================================================================
+// GESTIÓN DE INTERFAZ
+// ============================================================================
+
+function openSettings() {
+  settingsPanel.classList.add('show');
+  loadSettings();
 }
 
-function mostrarCargando() {
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'message ai';
-    loadingDiv.id = 'loading-indicator';
-    loadingDiv.innerHTML = `
-        <div class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
+function closeSettings() {
+  settingsPanel.classList.remove('show');
+}
+
+function openSidebar() {
+  sidebar.classList.add('open');
+  sidebarOverlay.classList.add('active');
+}
+
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('active');
+}
+
+// ============================================================================
+// GESTIÓN DE MENSAJES
+// ============================================================================
+
+function addMessage(text, role = 'assistant') {
+  const msg = document.createElement('div');
+  msg.className = `message ${role}`;
+  msg.textContent = text;
+  chatArea.appendChild(msg);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function renderHtmlMessage(html) {
+  const msg = document.createElement('div');
+  msg.className = 'message assistant';
+  msg.innerHTML = html;
+  chatArea.appendChild(msg);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showTyping() {
+  if (typingActive) return;
+  typingActive = true;
+
+  const container = document.createElement('div');
+  container.className = 'message assistant';
+  container.id = 'typing-container';
+
+  const typing = document.createElement('div');
+  typing.className = 'typing-indicator';
+
+  for (let i = 0; i < 3; i += 1) {
+    const dot = document.createElement('span');
+    dot.className = 'typing-dot';
+    typing.appendChild(dot);
+  }
+
+  container.appendChild(typing);
+  chatArea.appendChild(container);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function hideTyping() {
+  if (!typingActive) return;
+  typingActive = false;
+
+  const typing = document.getElementById('typing-container');
+  if (typing) typing.remove();
+}
+
+function autoResizeTextarea() {
+  userInput.style.height = 'auto';
+  userInput.style.height = `${Math.min(userInput.scrollHeight, 120)}px`;
+}
+
+// ============================================================================
+// LLAMADAS A APIS
+// ============================================================================
+
+async function callChatApi(prompt) {
+  const url = retrieve('apiUrl');
+  const key = retrieve('apiKey');
+  const model = retrieve('apiModel', 'gpt-4o-mini');
+  const systemPrompt = retrieve('systemPrompt', 'Eres Cerberus IA, un asistente inteligente, creativo y útil.');
+
+  if (!url || !key || !model) {
+    addMessage('⚠️ Configura la URL, la API key y el modelo del chat principal.', 'system');
+    return null;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.8
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data, null, 2));
+  }
+
+  return data.choices?.[0]?.message?.content || data.content?.[0]?.text || '(sin respuesta)';
+}
+
+async function generateImage(prompt) {
+  const url = retrieve('imageApiUrl');
+  const key = retrieve('imageApiKey');
+  const model = retrieve('imageModel', 'black-forest-labs/flux-1-schnell');
+
+  if (!url || !key || !model) {
+    addMessage('⚠️ Completa la URL, la API key y el modelo de imagen.', 'system');
+    return null;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
+      'HTTP-Referer': 'https://cerberus-ia.app',
+      'X-Title': 'Cerberus IA'
+    },
+    body: JSON.stringify({ model, prompt })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data, null, 2));
+  }
+
+  return data.data?.[0]?.url || data.url;
+}
+
+async function generateVideo(prompt) {
+  const url = retrieve('videoApiUrl');
+  const key = retrieve('videoApiKey');
+  const model = retrieve('videoModel', 'kling-ai/kling-video-v1');
+
+  if (!url || !key || !model) {
+    addMessage('⚠️ Completa la URL, la API key y el modelo de video.', 'system');
+    return null;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
+      'HTTP-Referer': 'https://cerberus-ia.app',
+      'X-Title': 'Cerberus IA'
+    },
+    body: JSON.stringify({ model, prompt })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data, null, 2));
+  }
+
+  return data.data?.[0]?.url || data.url || data.status_url;
+}
+
+// ============================================================================
+// ENVÍO DE MENSAJES
+// ============================================================================
+
+async function sendMessage() {
+  const text = userInput.value.trim();
+  if (!text) return;
+
+  userInput.value = '';
+  autoResizeTextarea();
+  addMessage(text, 'user');
+  showTyping();
+
+  try {
+    if (currentTab === 'images') {
+      const imageUrl = await generateImage(text);
+      hideTyping();
+
+      if (!imageUrl) {
+        addMessage('No se recibió ninguna imagen. Verifica el modelo y la API.', 'system');
+        return;
+      }
+
+      renderHtmlMessage(`
+        <div class="result-card">
+          <strong>✅ Imagen generada</strong>
+          <img src="${imageUrl}" alt="Imagen generada" />
         </div>
-    `;
-    chatMessages.appendChild(loadingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    return 'loading-indicator';
-}
-
-function ocultarCargando(id) {
-    const element = document.getElementById(id);
-    if (element) element.remove();
-}
-
-async function consultarGemini(prompt) {
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-        })
-    });
-
-    const data = await response.json();
-    if (data.candidates && data.candidates[0].content) {
-        return data.candidates[0].content.parts[0].text;
-    } else {
-        throw new Error("Respuesta inválida de la API");
+      `);
+      return;
     }
+
+    if (currentTab === 'video') {
+      const videoUrl = await generateVideo(text);
+      hideTyping();
+
+      if (!videoUrl) {
+        addMessage('No se recibió ningún video. Verifica el modelo y la API.', 'system');
+        return;
+      }
+
+      renderHtmlMessage(`
+        <div class="result-card">
+          <strong>✅ Video solicitado</strong>
+          <a href="${videoUrl}" target="_blank" rel="noopener noreferrer">Ver / Descargar</a>
+        </div>
+      `);
+      return;
+    }
+
+    const reply = await callChatApi(text);
+    hideTyping();
+
+    if (reply) {
+      addMessage(reply, 'assistant');
+    } else {
+      addMessage('(sin respuesta)', 'assistant');
+    }
+  } catch (error) {
+    hideTyping();
+    addMessage(`Error: ${error.message}`, 'error');
+  }
 }
+
+// ============================================================================
+// EVENTOS
+// ============================================================================
+
+userInput.addEventListener('input', autoResizeTextarea);
+
+userInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+sendBtn.addEventListener('click', sendMessage);
+
+menuBtn.addEventListener('click', openSidebar);
+sidebarClose.addEventListener('click', closeSidebar);
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+settingsOpenBtn.addEventListener('click', openSettings);
+settingsCloseBtn.addEventListener('click', closeSettings);
+cancelSettingsBtn.addEventListener('click', closeSettings);
+
+saveSettingsBtn.addEventListener('click', () => {
+  saveSettings();
+  closeSettings();
+});
+
+tabBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach((item) => item.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+  });
+});
+
+// ============================================================================
+// INICIALIZACIÓN
+// ============================================================================
+
+window.addEventListener('load', () => {
+  loadSettings();
+  addMessage('👋 Hola, soy Cerberus IA. Generado por carlosart.\n\n💬 Chat | 🖼️ Imágenes | 🎬 Video | 📝 Guiones', 'system');
+});
